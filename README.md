@@ -1,0 +1,2 @@
+# UTS_CLOUD_COMPUTING
+Eco Lapor adalah platform web dirancang untuk fasilitas masyarakat dalam melaporkan titik penumpukan sampah liar secara real-time. Aplikasi ini tujuannya untuk membuka mata warga terhadap kebersihan lingkungan dengan tindakan dari petugas kebersihan.
