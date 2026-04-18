@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Pelaporan Sampah</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body { font-family: sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: auto; }
+        .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        input, textarea, button { width: 100%; margin-bottom: 15px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        .btn-primary { background: #198754; color: white; border: none; font-weight: bold; cursor: pointer; }
+        .report-item { border-bottom: 1px solid #eee; padding: 15px 0; display: flex; justify-content: space-between; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+            <a href="/map" class="btn-primary" style="text-decoration:none; padding:10px 15px; border-radius:5px;"><i class="bi bi-map"></i> Lihat Peta</a>
+            <% if (role === 'admin') { %>
+                <a href="/logout" style="color: red; font-weight: bold;">Logout Petugas</a>
+            <% } %>
+        </div>
+
+        <div class="card">
+            <h2>Buat Laporan Baru</h2>
+            <form action="/submit" method="POST" enctype="multipart/form-data">
+                <input type="text" name="subjek" placeholder="Subjek/Judul Laporan" required>
+                <textarea name="deskripsi" placeholder="Deskripsi detail..." required></textarea>
+                <input type="text" name="lokasi" placeholder="Nama Jalan / Patokan Lokasi" required>
+                
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" name="latitude" placeholder="Latitude (Contoh: -6.914744)" required>
+                    <input type="text" name="longitude" placeholder="Longitude (Contoh: 107.609810)" required>
+                </div>
+
+                <input type="file" name="foto" accept="image/*" required>
+                <button type="submit" class="btn-primary">Kirim Laporan</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>Daftar Laporan Terbaru</h2>
+            <% if (laporan_list.length > 0) { %>
+                <% laporan_list.forEach(lap => { %>
+                    <div class="report-item">
+                        <div>
+                            <strong><%= lap.subjek %></strong> <br>
+                            <small><%= lap.lokasi %> | Status: <%= lap.status %></small>
+                        </div>
+                        <a href="/detail/<%= lap.id %>" style="color: #0d6efd; text-decoration: none;">Lihat Detail</a>
+                    </div>
+                <% }) %>
+            <% } else { %>
+                <p>Belum ada laporan.</p>
+            <% } %>
+        </div>
+    </div>
+</body>
+</html>

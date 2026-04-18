@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detail Laporan</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root { --primary: #198754; --bg: #f4f7f6; --card: #ffffff; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
+        body { background-color: var(--bg); }
+        .nav-top { padding: 15px; background: #fff; position: sticky; top:0; z-index:10; }
+        .nav-top a { text-decoration: none; color: var(--primary); font-weight: bold; font-size: 1.1rem; }
+        
+        .container { max-width: 600px; margin: 0 auto; background: #fff; min-height: 100vh; }
+        .main-img { width: 100%; max-height: 350px; object-fit: cover; }
+        
+        .content { padding: 20px; }
+        .status-badge { display: inline-block; background: #ffc107; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; margin-bottom: 10px; }
+        .status-badge.Selesai { background: var(--primary); color: white; }
+        
+        .header-title { display: flex; justify-content: space-between; align-items: flex-start; }
+        h1 { font-size: 1.5rem; margin-bottom: 10px; }
+        .date { font-size: 0.85rem; color: #888; text-align: right; }
+        
+        .location { color: #555; font-size: 0.95rem; margin-bottom: 15px; }
+        .btn-nav { display: inline-block; border: 1px solid #0d6efd; color: #0d6efd; padding: 8px 15px; border-radius: 20px; text-decoration: none; font-weight: 600; font-size: 0.9rem; margin-bottom: 20px; }
+        
+        .section-label { font-size: 0.8rem; font-weight: bold; color: #888; text-transform: uppercase; margin-bottom: 5px; }
+        .desc-text { font-size: 1rem; color: #333; margin-bottom: 30px; }
+
+        /* Panel Verifikasi Admin */
+        .admin-panel { border: 2px dashed var(--primary); background: #e8f5e9; border-radius: 12px; padding: 20px; text-align: center; }
+        .admin-panel h3 { color: var(--primary); margin-bottom: 5px; }
+        .admin-panel p { font-size: 0.85rem; color: #555; margin-bottom: 15px; }
+        .btn-verify { background: var(--primary); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; margin-top: 15px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav-top">
+            <a href="/"><i class="bi bi-arrow-left"></i> Kembali ke Peta</a>
+        </div>
+
+        <img src="<%= lap.foto_url %>" class="main-img" alt="Foto Laporan">
+
+        <div class="content">
+            <div class="header-title">
+                <div>
+                    <span class="status-badge <%= lap.status %>"><%= lap.status.toUpperCase() %></span>
+                    <h1><%= lap.subjek %></h1>
+                </div>
+                <div class="date">Dilaporkan pada:<br><strong><%= new Date(lap.tanggal).toLocaleDateString('id-ID') %></strong></div>
+            </div>
+
+            <div class="location">
+                <i class="bi bi-geo-alt-fill" style="color:var(--primary);"></i> <%= lap.lokasi %>
+            </div>
+
+            <% if (lap.latitude && lap.longitude) { %>
+                <a href="https://www.google.com/maps/dir/?api=1&destination=<%= lap.latitude %>,<%= lap.longitude %>" target="_blank" class="btn-nav">
+                    <i class="bi bi-map-fill"></i> Navigasi ke Lokasi
+                </a>
+            <% } %>
+
+            <div class="section-label">Detail Laporan:</div>
+            <div class="desc-text"><%= lap.deskripsi || 'Tidak ada detail tambahan.' %></div>
+
+            <% if (lap.status === 'Selesai' && lap.bukti_selesai_url) { %>
+                <div class="section-label">Bukti Penyelesaian (Sudah Bersih):</div>
+                <img src="<%= lap.bukti_selesai_url %>" style="width: 100%; border-radius: 8px; margin-bottom: 20px;">
+            <% } %>
+
+            <% if (role === 'admin' && lap.status !== 'Selesai') { %>
+                <div class="admin-panel">
+                    <i class="bi bi-patch-check-fill" style="font-size: 2rem; color: var(--primary);"></i>
+                    <h3>Panel Verifikasi Petugas</h3>
+                    <p>Gunakan bagian ini jika Anda telah membersihkan lokasi ini.</p>
+                    
+                    <form action="/verify/<%= lap.id %>" method="POST" enctype="multipart/form-data">
+                        <div style="text-align: left; margin-bottom: 10px; font-size: 0.9rem; font-weight: bold;">Ambil Foto Bukti (Sudah Bersih)</div>
+                        <input type="file" name="foto_bukti" accept="image/*" required style="width: 100%; padding: 10px; background: #fff; border: 1px solid #ccc; border-radius: 5px;">
+                        <button type="submit" class="btn-verify">Konfirmasi Selesai Dibersihkan</button>
+                    </form>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</body>
+</html>
