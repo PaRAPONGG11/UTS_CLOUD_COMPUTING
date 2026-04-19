@@ -11,8 +11,7 @@
         .nav-top { padding: 15px 20px; background: #fff; display: flex; justify-content: space-between; box-shadow: 0 2px 5px rgba(0,0,0,0.1); z-index: 1000; position: relative; }
         .nav-top a { text-decoration: none; color: #198754; font-weight: bold; font-size: 1.1rem; }
         .live-badge { background: #198754; color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
-        
-        #map { width: 100%; height: calc(100vh - 55px); } /* Sisa layar setelah navbar */
+        #map { width: 100%; height: calc(100vh - 55px); }
     </style>
 </head>
 <body>
@@ -20,31 +19,20 @@
         <a href="/"><i class="bi bi-chevron-left"></i> Kembali</a>
         <span class="live-badge"><i class="bi bi-broadcast"></i> Live Data</span>
     </div>
-
     <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Inisialisasi Peta (Default ke Bandung jika tidak ada data)
         var map = L.map('map').setView([-6.914744, 107.609810], 13);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-
-        // Ambil data laporan dari backend EJS
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+        
         var laporanData = <%- laporan_list %>;
-
-        // Loop dan tambahkan marker
         laporanData.forEach(function(lap) {
             if(lap.latitude && lap.longitude) {
-                var color = lap.status === 'Selesai' ? 'green' : 'blue';
-                
                 var marker = L.marker([lap.latitude, lap.longitude]).addTo(map);
                 marker.bindPopup(`
-                    <b>${lap.subjek}</b><br>
-                    Status: ${lap.status}<br>
-                    <a href="/detail/${lap.id}" style="color: #198754; text-decoration: none; font-weight:bold;">Lihat Detail</a>
+                    <b>${lap.subjek}</b><br>Status: ${lap.status}<br>
+                    <a href="/detail/${lap.id}" style="color: #198754; font-weight:bold;">Lihat Detail</a>
                 `);
             }
         });

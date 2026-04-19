@@ -1,3 +1,68 @@
-<a href="https://www.google.com/maps/search/?api=1&query=<%= lap.latitude %>,<%= lap.longitude %>" target="_blank" class="btn-nav">
-    <i class="bi bi-map-fill"></i> Navigasi ke Lokasi
-</a>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detail Laporan</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body { background: #f4f7f6; font-family: sans-serif; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 0 auto; background: #fff; min-height: 100vh; padding-bottom: 30px; box-shadow: 0 0 10px rgba(0,0,0,0.05); }
+        .nav-top { padding: 15px; background: #fff; position: sticky; top:0; z-index:10; border-bottom: 1px solid #eee; }
+        .nav-top a { text-decoration: none; color: #198754; font-weight: bold; }
+        .main-img { width: 100%; max-height: 350px; object-fit: cover; }
+        .content { padding: 20px; }
+        .status-badge { background: #ffc107; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; display: inline-block; margin-bottom: 10px; }
+        .status-badge.Selesai { background: #198754; color: white; }
+        .btn-nav { display: inline-block; border: 1px solid #0d6efd; color: #0d6efd; padding: 8px 15px; border-radius: 20px; text-decoration: none; font-weight: bold; margin: 15px 0; }
+        .admin-panel { border: 2px dashed #198754; background: #e8f5e9; border-radius: 12px; padding: 20px; text-align: center; margin-top: 20px; }
+        .btn-verify { background: #198754; color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; margin-top: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav-top">
+            <a href="/"><i class="bi bi-arrow-left"></i> Kembali ke Beranda</a>
+        </div>
+
+        <img src="<%= lap.foto_url %>" class="main-img" alt="Foto Laporan">
+
+        <div class="content">
+            <span class="status-badge <%= lap.status %>"><%= lap.status.toUpperCase() %></span>
+            <h1 style="margin: 0 0 5px 0;"><%= lap.subjek %></h1>
+            <p style="color: #888; font-size: 0.85rem; margin-bottom: 15px;">Dilaporkan pada: <%= new Date(lap.tanggal).toLocaleDateString('id-ID') %></p>
+
+            <div style="color: #555; margin-bottom: 10px;">
+                <i class="bi bi-geo-alt-fill" style="color:#198754;"></i> <%= lap.lokasi %>
+            </div>
+
+            <% if (lap.latitude && lap.longitude) { %>
+                <a href="https://www.google.com/maps/search/?api=1&query=<%= lap.latitude %>,<%= lap.longitude %>" target="_blank" class="btn-nav">
+                    <i class="bi bi-map-fill"></i> Navigasi ke Lokasi (Google Maps)
+                </a>
+            <% } %>
+
+            <h4 style="margin: 20px 0 5px 0; color: #888; text-transform: uppercase; font-size: 0.8rem;">Deskripsi Laporan:</h4>
+            <p style="color: #333; line-height: 1.5;"><%= lap.deskripsi %></p>
+
+            <% if (lap.status === 'Selesai' && lap.bukti_selesai_url) { %>
+                <h4 style="margin: 20px 0 10px 0; color: #198754;">Bukti Penyelesaian:</h4>
+                <img src="<%= lap.bukti_selesai_url %>" style="width: 100%; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+            <% } %>
+
+            <% if (typeof role !== 'undefined' && role === 'admin' && lap.status !== 'Selesai') { %>
+                <div class="admin-panel">
+                    <i class="bi bi-patch-check-fill" style="font-size: 2rem; color: #198754;"></i>
+                    <h3 style="color: #198754; margin: 5px 0;">Verifikasi Petugas</h3>
+                    <p style="font-size: 0.85rem; color: #555;">Gunakan panel ini untuk menutup laporan jika sudah dibersihkan.</p>
+                    
+                    <form action="/verify/<%= lap.id %>" method="POST" enctype="multipart/form-data">
+                        <input type="file" name="foto_bukti" accept="image/*" required style="width: 100%; padding: 10px; background: #fff; border: 1px solid #ccc; border-radius: 5px;">
+                        <button type="submit" class="btn-verify">Konfirmasi Selesai Dibersihkan</button>
+                    </form>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</body>
+</html>

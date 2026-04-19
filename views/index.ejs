@@ -10,24 +10,26 @@
         .container { max-width: 800px; margin: auto; }
         .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         input, textarea, button { width: 100%; margin-bottom: 15px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
-        .btn-primary { background: #198754; color: white; border: none; font-weight: bold; cursor: pointer; }
-        .report-item { border-bottom: 1px solid #eee; padding: 15px 0; display: flex; justify-content: space-between; }
+        .btn-primary { background: #198754; color: white; border: none; font-weight: bold; cursor: pointer; padding: 12px; }
+        .report-item { border-bottom: 1px solid #eee; padding: 15px 0; display: flex; justify-content: space-between; align-items: center; }
+        .status-badge { background: #ffc107; padding: 3px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; }
+        .status-badge.Selesai { background: #198754; color: white; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 20px; align-items: center;">
             <a href="/map" class="btn-primary" style="text-decoration:none; padding:10px 15px; border-radius:5px;"><i class="bi bi-map"></i> Lihat Peta</a>
-            <% if (role === 'admin') { %>
-                <a href="/logout" style="color: red; font-weight: bold;">Logout Petugas</a>
+            <% if (typeof role !== 'undefined' && role === 'admin') { %>
+                <a href="/logout" style="color: red; font-weight: bold; text-decoration: none;"><i class="bi bi-box-arrow-right"></i> Logout Petugas</a>
             <% } %>
         </div>
 
         <div class="card">
-            <h2>Buat Laporan Baru</h2>
+            <h2><i class="bi bi-megaphone"></i> Buat Laporan Baru</h2>
             <form action="/submit" method="POST" enctype="multipart/form-data">
                 <input type="text" name="subjek" placeholder="Subjek/Judul Laporan" required>
-                <textarea name="deskripsi" placeholder="Deskripsi detail..." required></textarea>
+                <textarea name="deskripsi" placeholder="Deskripsi detail..." required rows="3"></textarea>
                 <input type="text" name="lokasi" placeholder="Nama Jalan / Patokan Lokasi" required>
                 
                 <div style="display: flex; gap: 10px;">
@@ -36,24 +38,24 @@
                 </div>
 
                 <input type="file" name="foto" accept="image/*" required>
-                <button type="submit" class="btn-primary">Kirim Laporan</button>
+                <button type="submit" class="btn-primary"><i class="bi bi-send-fill"></i> Kirim Laporan</button>
             </form>
         </div>
 
         <div class="card">
             <h2>Daftar Laporan Terbaru</h2>
-            <% if (laporan_list.length > 0) { %>
+            <% if (laporan_list && laporan_list.length > 0) { %>
                 <% laporan_list.forEach(lap => { %>
                     <div class="report-item">
                         <div>
                             <strong><%= lap.subjek %></strong> <br>
-                            <small><%= lap.lokasi %> | Status: <%= lap.status %></small>
+                            <small><%= lap.lokasi %> | <span class="status-badge <%= lap.status %>"><%= lap.status %></span></small>
                         </div>
-                        <a href="/detail/<%= lap.id %>" style="color: #0d6efd; text-decoration: none;">Lihat Detail</a>
+                        <a href="/detail/<%= lap.id %>" class="btn-primary" style="background: #0d6efd; text-decoration: none; padding: 8px 15px; border-radius: 5px;">Detail</a>
                     </div>
                 <% }) %>
             <% } else { %>
-                <p>Belum ada laporan.</p>
+                <p>Belum ada laporan yang masuk.</p>
             <% } %>
         </div>
     </div>
