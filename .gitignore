@@ -1,0 +1,28 @@
+# Dependency: Jangan upload folder library yang sangat besar
+node_modules/
+
+# Security: SANGAT PENTING! Jangan upload file rahasia berisi password/kunci AWS
+.env
+
+# SSH Keys: Jangan sampai kunci akses server (.pem) bocor ke publik
+*.pem
+
+# Local Uploads: Jangan upload foto-foto sampah hasil testing lokal ke GitHub
+public/uploads/*
+# Kecuali file .gitkeep agar foldernya tetap ada di server
+!public/uploads/.gitkeep
+
+# Logs: Abaikan file log dari npm atau sistem
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+*.log
+
+# OS Metadata: File sampah dari sistem operasi (Mac/Windows)
+.DS_Store
+Thumbs.db
+
+# Folder IDE: Abaikan settingan VS Code atau editor lainnya
+.vscode/
+.idea/

@@ -1,0 +1,20 @@
+# Mengabaikan folder dependency lokal
+# (Aplikasi akan menjalankan 'npm install' sendiri di dalam Docker)
+node_modules
+
+# Mengabaikan log error npm
+npm-debug.log
+
+# Mengabaikan file rahasia (SANGAT PENTING untuk keamanan AWS)
+.env
+
+# Mengabaikan folder Git dan GitHub Actions
+.git
+.github
+
+# Mengabaikan file Docker itu sendiri
+Dockerfile
+.dockerignore
+
+# Mengabaikan dokumentasi yang tidak perlu di production
+README.md
