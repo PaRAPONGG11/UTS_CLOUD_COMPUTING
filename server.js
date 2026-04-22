@@ -5,7 +5,6 @@ const path = require('path');
 const multer = require('multer');
 const { PutObjectCommand } = require('@aws-sdk/client-s3');
 
-// Pastikan dua file config ini ada!
 const pool = require('./config/db');
 const s3Client = require('./config/s3'); 
 
@@ -18,119 +17,113 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 app.use(session({ secret: process.env.SESSION_SECRET || 'fallback_rahasia', resave: false, saveUninitialized: true }));
 
-// --- KONFIGURASI UPLOAD FOTO AWS S3 (Memory Storage) ---
-// Kita simpan di memori (buffer) sementara, lalu langsung dilempar ke S3
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-// --- ROUTE: BERANDA (FORM & LIST) ---
+// --- ROUTE: BERANDA ---
 app.get('/', async (req, res) => {
     try {
-        // Trik Alias dipertahankan: Ambil dari reports (Inggris), jadikan variabel (Indonesia)
-        const [laporan] = await pool.query(`
-            SELECT id, title AS subjek, description AS deskripsi, 
-                   location_name AS lokasi, latitude, longitude, 
-                   image_url AS foto_url, status, 
-                   evidence_url AS bukti_selesai_url, created_at AS tanggal 
-            FROM reports ORDER BY id DESC
-        `);
-        res.render('index', { laporan_list: laporan, user: req.session.user, role: req.session.role });
+        const [laporan] = await pool.query(`SELECT * FROM reports ORDER BY id DESC`);
+        // Disesuaikan: index.ejs membutuhkan variabel bernama 'reports'
+        res.render('index', { reports: laporan, user: req.session.user, role: req.session.role });
     } catch (error) {
-        console.error(error);
-        res.status(500).send("Database Error.");
+        console.error("Error di Beranda:", error);
+        res.status(500).send("Terjadi kesalahan saat memuat beranda.");
     }
 });
 
 // --- ROUTE: SUBMIT LAPORAN ---
-app.post('/submit', upload.single('foto'), async (req, res) => {
-    const { subjek, deskripsi, lokasi, latitude, longitude } = req.body;
+// Disesuaikan: index.ejs form action mengarah ke /report, input file bernama 'image'
+app.post('/report', upload.single('image'), async (req, res) => {
+    const { title, description, location, latitude, longitude } = req.body;
     let fotoUrl = "";
 
     try {
-        // Jika ada file foto, lempar ke AWS S3
         if (req.file) {
             const fileName = Date.now() + '-' + req.file.originalname.replace(/\s+/g, '-');
-            
             await s3Client.send(new PutObjectCommand({
                 Bucket: process.env.S3_BUCKET_NAME,
                 Key: fileName,
                 Body: req.file.buffer,
                 ContentType: req.file.mimetype
             }));
-            
-            // Format URL publik S3
             fotoUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.S3_REGION}.amazonaws.com/${fileName}`;
         }
 
-        // Masukkan data ke AWS RDS (tabel reports)
         await pool.query(
             "INSERT INTO reports (title, description, location_name, latitude, longitude, image_url) VALUES (?, ?, ?, ?, ?, ?)", 
-            [subjek, deskripsi, lokasi, latitude, longitude, fotoUrl]
+            [title, description, location, latitude, longitude, fotoUrl]
         );
         res.redirect('/');
     } catch (error) {
-        console.error(error);
-        res.status(500).send("Gagal mengunggah laporan ke AWS.");
-    }
-});
-
-// --- ROUTE: DETAIL & VERIFIKASI PETUGAS ---
-app.get('/detail/:id', async (req, res) => {
-    try {
-        const [laporan] = await pool.query(`
-            SELECT id, title AS subjek, description AS deskripsi, 
-                   location_name AS lokasi, latitude, longitude, 
-                   image_url AS foto_url, status, 
-                   evidence_url AS bukti_selesai_url, created_at AS tanggal 
-            FROM reports WHERE id = ?
-        `, [req.params.id]);
-
-        if (laporan.length > 0) {
-            res.render('detail', { lap: laporan[0], role: req.session.role });
-        } else {
-            res.status(404).send("Laporan tidak ditemukan.");
-        }
-    } catch (error) {
-        res.status(500).send("Database Error.");
-    }
-});
-
-// --- API VERIFIKASI PETUGAS ---
-app.post('/verify/:id', upload.single('foto_bukti'), async (req, res) => {
-    if (req.session.role !== 'admin') return res.status(403).send("Hanya petugas yang bisa verifikasi.");
-    
-    let buktiUrl = "";
-
-    try {
-        // Jika petugas upload bukti foto, lempar ke S3
-        if (req.file) {
-            const fileName = 'bukti-' + Date.now() + '-' + req.file.originalname.replace(/\s+/g, '-');
-            
-            await s3Client.send(new PutObjectCommand({
-                Bucket: process.env.S3_BUCKET_NAME,
-                Key: fileName,
-                Body: req.file.buffer,
-                ContentType: req.file.mimetype
-            }));
-            
-            buktiUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.S3_REGION}.amazonaws.com/${fileName}`;
-        }
-
-        await pool.query("UPDATE reports SET status = 'Selesai', evidence_url = ? WHERE id = ?", [buktiUrl, req.params.id]);
-        res.redirect('/detail/' + req.params.id);
-    } catch (error) {
-        console.error(error);
-        res.status(500).send("Gagal verifikasi laporan.");
+        console.error("Error Submit:", error);
+        res.status(500).send("Gagal mengunggah laporan.");
     }
 });
 
 // --- ROUTE: PETA SEBARAN ---
-app.get('/map', async (req, res) => {
+// Disesuaikan: navbar link mengarah ke /reports
+app.get('/reports', async (req, res) => {
     try {
-        const [laporan] = await pool.query("SELECT id, title AS subjek, latitude, longitude, status FROM reports WHERE latitude IS NOT NULL");
-        res.render('map', { laporan_list: JSON.stringify(laporan) });
+        const [laporan] = await pool.query("SELECT * FROM reports ORDER BY id DESC");
+        res.render('reports', { reports: laporan });
     } catch (error) {
-        res.status(500).send("Database Error.");
+        console.error("Error Peta:", error);
+        res.status(500).send("Gagal memuat peta.");
+    }
+});
+
+// --- ROUTE: DETAIL LAPORAN ---
+app.get('/reports/:id', async (req, res) => {
+    try {
+        const [laporan] = await pool.query("SELECT * FROM reports WHERE id = ?", [req.params.id]);
+        if (laporan.length > 0) {
+            // Disesuaikan: detail.ejs membutuhkan variabel bernama 'report'
+            res.render('detail', { report: laporan[0], role: req.session.role });
+        } else {
+            res.status(404).send("Laporan tidak ditemukan.");
+        }
+    } catch (error) {
+        console.error("Error Detail:", error);
+        res.status(500).send("Gagal memuat detail laporan.");
+    }
+});
+
+// --- API VERIFIKASI PETUGAS ---
+// Disesuaikan: action mengarah ke /reports/:id/verify, input file bernama 'evidence'
+app.post('/reports/:id/verify', upload.single('evidence'), async (req, res) => {
+    if (req.session.role !== 'admin') return res.status(403).send("Hanya petugas yang bisa verifikasi.");
+    
+    let buktiUrl = "";
+    try {
+        if (req.file) {
+            const fileName = 'bukti-' + Date.now() + '-' + req.file.originalname.replace(/\s+/g, '-');
+            await s3Client.send(new PutObjectCommand({
+                Bucket: process.env.S3_BUCKET_NAME,
+                Key: fileName,
+                Body: req.file.buffer,
+                ContentType: req.file.mimetype
+            }));
+            buktiUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.S3_REGION}.amazonaws.com/${fileName}`;
+        }
+
+        await pool.query("UPDATE reports SET status = 'Selesai', evidence_url = ? WHERE id = ?", [buktiUrl, req.params.id]);
+        res.redirect('/reports/' + req.params.id);
+    } catch (error) {
+        console.error("Error Verifikasi:", error);
+        res.status(500).send("Gagal verifikasi laporan.");
+    }
+});
+
+// --- API HAPUS LAPORAN ---
+// Ditambahkan karena detail.ejs memiliki tombol form penghapusan laporan
+app.post('/reports/:id/delete', async (req, res) => {
+    try {
+        await pool.query("DELETE FROM reports WHERE id = ?", [req.params.id]);
+        res.redirect('/');
+    } catch (error) {
+        console.error("Error Hapus:", error);
+        res.status(500).send("Gagal menghapus laporan.");
     }
 });
 
