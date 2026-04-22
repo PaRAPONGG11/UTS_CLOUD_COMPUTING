@@ -8,13 +8,13 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # 4. Install semua library (Express, MySQL2, AWS SDK, dll)
-RUN npm install
+RUN npm install --production
 
 # 5. Copy seluruh sisa kode aplikasi Anda (views, server.js, dll)
 COPY . .
 
 # 6. Buka port 5000 (sesuai dengan server.js Anda)
-EXPOSE 3000
+EXPOSE 80
 
 # 7. Perintah wajib untuk menjalankan aplikasi
-CMD [ "npm", "start" ]
+CMD [ "node", "start" ]

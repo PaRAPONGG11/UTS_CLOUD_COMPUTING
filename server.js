@@ -10,7 +10,7 @@ const pool = require('./config/db');
 const s3Client = require('./config/s3'); 
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 80;
 
 app.set('view engine', 'ejs');
 app.use(express.json());
