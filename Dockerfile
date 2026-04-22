@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 80
 
 # 7. Perintah wajib untuk menjalankan aplikasi
-CMD [ "node", "start" ]
+CMD ["node", "server.js"]
