@@ -3,66 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detail Laporan</title>
+    <title>Detail Laporan - EcoLapor/title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-        body { background: #f4f7f6; font-family: sans-serif; margin: 0; padding: 0; }
-        .container { max-width: 600px; margin: 0 auto; background: #fff; min-height: 100vh; padding-bottom: 30px; box-shadow: 0 0 10px rgba(0,0,0,0.05); }
-        .nav-top { padding: 15px; background: #fff; position: sticky; top:0; z-index:10; border-bottom: 1px solid #eee; }
-        .nav-top a { text-decoration: none; color: #198754; font-weight: bold; }
-        .main-img { width: 100%; max-height: 350px; object-fit: cover; }
-        .content { padding: 20px; }
-        .status-badge { background: #ffc107; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; display: inline-block; margin-bottom: 10px; }
-        .status-badge.Selesai { background: #198754; color: white; }
-        .btn-nav { display: inline-block; border: 1px solid #0d6efd; color: #0d6efd; padding: 8px 15px; border-radius: 20px; text-decoration: none; font-weight: bold; margin: 15px 0; }
-        .admin-panel { border: 2px dashed #198754; background: #e8f5e9; border-radius: 12px; padding: 20px; text-align: center; margin-top: 20px; }
-        .btn-verify { background: #198754; color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; margin-top: 10px; cursor: pointer; }
+        :root { --primary: #059669; --bg: #f8fafc; }
+        body { background: var(--bg); font-family: 'Inter', sans-serif; }
+        .navbar { background: white; border-bottom: 1px solid #e2e8f0; }
+        .detail-card { border: none; border-radius: 25px; overflow: hidden; background: white; }
+        .img-main { width: 100%; max-height: 450px; object-fit: cover; }
+        .verification-panel { 
+            background: #f0fdf4; 
+            border: 2px dashed #16a34a; 
+            border-radius: 20px; 
+            padding: 2rem;
+        }
+        .evidence-img { width: 100%; border-radius: 15px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .btn-maps { transition: 0.3s; font-weight: 600; }
+        .btn-maps:hover { background-color: #4285F4; color: white; border-color: #4285F4; }
+        .btn-delete { transition: 0.3s; }
+        .btn-delete:hover { background-color: #dc3545; color: white; }
     </style>
 </head>
 <body>
+
+<nav class="navbar sticky-top mb-4">
     <div class="container">
-        <div class="nav-top">
-            <a href="/"><i class="bi bi-arrow-left"></i> Kembali ke Beranda</a>
-        </div>
+        <a class="navbar-brand fw-bold text-success" href="/reports">
+            <i class="bi bi-arrow-left me-2"></i>Kembali ke Peta
+        </a>
+        <a href="/" class="btn btn-light btn-sm rounded-pill px-3 border">Ke Beranda</a>
+    </div>
+</nav>
 
-        <img src="<%= lap.foto_url %>" class="main-img" alt="Foto Laporan">
+<div class="container mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card detail-card shadow-sm">
+                <img src="<%= report.image_url %>" class="img-main" alt="Laporan Sampah">
+                
+                <div class="card-body p-4 p-md-5">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <% 
+                                let badgeClass = 'bg-warning text-dark';
+                                if(report.status === 'Selesai') badgeClass = 'bg-success text-white';
+                            %>
+                            <span class="badge <%= badgeClass %> rounded-pill px-3 py-2 text-uppercase mb-2" style="font-size: 0.7rem;">
+                                <%= report.status %>
+                            </span>
+                            <h2 class="fw-bold mb-1"><%= report.title %></h2>
+                            <p class="text-muted mb-2">
+                                <i class="bi bi-geo-alt-fill text-danger me-1"></i> <%= report.location_name %>
+                            </p>
+                            
+                            <div class="mb-4">
+                                <a href="https://www.google.com/maps?q=<%= report.latitude %>,<%= report.longitude %>" 
+                                   target="_blank" 
+                                   class="btn btn-outline-primary btn-sm btn-maps rounded-pill px-3 shadow-sm">
+                                    <i class="bi bi-map-fill me-2"></i>Navigasi ke Lokasi
+                                </a>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <small class="text-secondary d-block">Dilaporkan pada :</small>
+                            <span class="fw-bold d-block mb-3"><%= new Date(report.created_at).toLocaleDateString('id-ID') %></span>
+                            
+                            <form action="/reports/<%= report.id %>/delete" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus laporan ini? Data akan hilang permanen.');">
+                                <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3 btn-delete">
+                                    <i class="bi bi-trash3 me-1"></i> Hapus
+                                </button>
+                            </form>
+                        </div>
+                    </div>
 
-        <div class="content">
-            <span class="status-badge <%= lap.status %>"><%= lap.status.toUpperCase() %></span>
-            <h1 style="margin: 0 0 5px 0;"><%= lap.subjek %></h1>
-            <p style="color: #888; font-size: 0.85rem; margin-bottom: 15px;">Dilaporkan pada: <%= new Date(lap.tanggal).toLocaleDateString('id-ID') %></p>
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-uppercase small text-secondary">Detail Laporan:</h6>
+                        <p class="lead" style="font-size: 1rem;"><%= report.description || 'Tidak ada deskripsi tambahan.' %></p>
+                    </div>
 
-            <div style="color: #555; margin-bottom: 10px;">
-                <i class="bi bi-geo-alt-fill" style="color:#198754;"></i> <%= lap.lokasi %>
-            </div>
+                    <hr class="my-5">
 
-            <% if (lap.latitude && lap.longitude) { %>
-                <a href="https://www.google.com/maps/search/?api=1&query=<%= lap.latitude %>,<%= lap.longitude %>" target="_blank" class="btn-nav">
-                    <i class="bi bi-map-fill"></i> Navigasi ke Lokasi (Google Maps)
-                </a>
-            <% } %>
-
-            <h4 style="margin: 20px 0 5px 0; color: #888; text-transform: uppercase; font-size: 0.8rem;">Deskripsi Laporan:</h4>
-            <p style="color: #333; line-height: 1.5;"><%= lap.deskripsi %></p>
-
-            <% if (lap.status === 'Selesai' && lap.bukti_selesai_url) { %>
-                <h4 style="margin: 20px 0 10px 0; color: #198754;">Bukti Penyelesaian:</h4>
-                <img src="<%= lap.bukti_selesai_url %>" style="width: 100%; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-            <% } %>
-
-            <% if (typeof role !== 'undefined' && role === 'admin' && lap.status !== 'Selesai') { %>
-                <div class="admin-panel">
-                    <i class="bi bi-patch-check-fill" style="font-size: 2rem; color: #198754;"></i>
-                    <h3 style="color: #198754; margin: 5px 0;">Verifikasi Petugas</h3>
-                    <p style="font-size: 0.85rem; color: #555;">Gunakan panel ini untuk menutup laporan jika sudah dibersihkan.</p>
-                    
-                    <form action="/verify/<%= lap.id %>" method="POST" enctype="multipart/form-data">
-                        <input type="file" name="foto_bukti" accept="image/*" required style="width: 100%; padding: 10px; background: #fff; border: 1px solid #ccc; border-radius: 5px;">
-                        <button type="submit" class="btn-verify">Konfirmasi Selesai Dibersihkan</button>
-                    </form>
+                    <% if (report.status !== 'Selesai') { %>
+                        <div class="verification-panel">
+                            <div class="text-center mb-4">
+                                <i class="bi bi-patch-check-fill text-success display-4"></i>
+                                <h4 class="fw-bold mt-2">Panel Verifikasi Petugas</h4>
+                                <p class="text-muted">Upload foto bukti jika lokasi ini sudah dibersihkan.</p>
+                            </div>
+                            
+                            <form action="/reports/<%= report.id %>/verify" method="POST" enctype="multipart/form-data">
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold">Ambil Foto Bukti (Sudah Bersih)</label>
+                                    <input type="file" name="evidence" class="form-control form-control-lg border-success shadow-sm" accept="image/*" capture="environment" required>
+                                    <div class="form-text mt-2">Gunakan kamera untuk mengambil foto lokasi yang sudah bersih secara real-time.</div>
+                                </div>
+                                <button type="submit" class="btn btn-success btn-lg w-100 fw-bold shadow">
+                                    Konfirmasi Selesai Dibersihkan
+                                </button>
+                            </form>
+                        </div>
+                    <% } else { %>
+                        <div class="alert alert-success border-0 rounded-4 p-4 d-flex align-items-start shadow-sm">
+                            <i class="bi bi-check-circle-fill fs-2 me-3"></i>
+                            <div>
+                                <h5 class="fw-bold mb-1">Laporan Telah Diselesaikan</h5>
+                                <p class="mb-3">Titik sampah ini telah diverifikasi bersih oleh petugas lapangan.</p>
+                                <% if(report.evidence_url) { %>
+                                    <p class="small fw-bold text-uppercase mb-2">Foto Bukti Kebersihan:</p>
+                                    <img src="<%= report.evidence_url %>" class="evidence-img" alt="Bukti Bersih">
+                                <% } %>
+                            </div>
+                        </div>
+                    <% } %>
                 </div>
-            <% } %>
+            </div>
         </div>
     </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

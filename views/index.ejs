@@ -3,61 +3,217 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Pelaporan Sampah</title>
+    <title>SampahMasyarakat - Lapor Sampah</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
     <style>
-        body { font-family: sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: auto; }
-        .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        input, textarea, button { width: 100%; margin-bottom: 15px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
-        .btn-primary { background: #198754; color: white; border: none; font-weight: bold; cursor: pointer; padding: 12px; }
-        .report-item { border-bottom: 1px solid #eee; padding: 15px 0; display: flex; justify-content: space-between; align-items: center; }
-        .status-badge { background: #ffc107; padding: 3px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; }
-        .status-badge.Selesai { background: #198754; color: white; }
+        :root { --primary: #059669; --bg: #f8fafc; }
+        body { background: var(--bg); font-family: 'Inter', sans-serif; }
+        .navbar { background: white; border-bottom: 1px solid #e2e8f0; }
+        .card-form { border: none; border-radius: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .upload-zone { border: 2px dashed #cbd5e1; border-radius: 15px; padding: 1.5rem; cursor: pointer; background: #f1f5f9; transition: 0.3s; }
+        .upload-zone:hover { border-color: var(--primary); background: #ecfdf5; }
+        .report-card { border-radius: 20px; overflow: hidden; border: none; transition: 0.3s; background: white; }
+        .report-card:hover { transform: translateY(-5px); box-shadow: 0 12px 20px rgba(0,0,0,0.1); }
+        .img-box { height: 180px; overflow: hidden; position: relative; }
+        .img-box img { width: 100%; height: 100%; object-fit: cover; }
+        .status-badge { position: absolute; top: 10px; right: 10px; background: white; padding: 4px 12px; border-radius: 50px; font-size: 0.7rem; font-weight: 700; color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .btn-map { border-radius: 12px; font-weight: 600; }
     </style>
 </head>
 <body>
+
+<nav class="navbar sticky-top">
     <div class="container">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 20px; align-items: center;">
-            <a href="/map" class="btn-primary" style="text-decoration:none; padding:10px 15px; border-radius:5px;"><i class="bi bi-map"></i> Lihat Peta</a>
-            <% if (typeof role !== 'undefined' && role === 'admin') { %>
-                <a href="/logout" style="color: red; font-weight: bold; text-decoration: none;"><i class="bi bi-box-arrow-right"></i> Logout Petugas</a>
-            <% } %>
-        </div>
+        <a class="navbar-brand fw-bold text-success" href="/"><i class="bi bi-leaf-fill me-2"></i>SampahMasyarakat</a>
+        <a href="/reports" class="btn btn-outline-success btn-map px-4">
+            <i class="bi bi-map-fill me-2"></i>Lihat Peta
+        </a>
+    </div>
+</nav>
 
-        <div class="card">
-            <h2><i class="bi bi-megaphone"></i> Buat Laporan Baru</h2>
-            <form action="/submit" method="POST" enctype="multipart/form-data">
-                <input type="text" name="subjek" placeholder="Subjek/Judul Laporan" required>
-                <textarea name="deskripsi" placeholder="Deskripsi detail..." required rows="3"></textarea>
-                <input type="text" name="lokasi" placeholder="Nama Jalan / Patokan Lokasi" required>
-                
-                <div style="display: flex; gap: 10px;">
-                    <input type="text" name="latitude" placeholder="Latitude (Contoh: -6.914744)" required>
-                    <input type="text" name="longitude" placeholder="Longitude (Contoh: 107.609810)" required>
-                </div>
-
-                <input type="file" name="foto" accept="image/*" required>
-                <button type="submit" class="btn-primary"><i class="bi bi-send-fill"></i> Kirim Laporan</button>
-            </form>
-        </div>
-
-        <div class="card">
-            <h2>Daftar Laporan Terbaru</h2>
-            <% if (laporan_list && laporan_list.length > 0) { %>
-                <% laporan_list.forEach(lap => { %>
-                    <div class="report-item">
-                        <div>
-                            <strong><%= lap.subjek %></strong> <br>
-                            <small><%= lap.lokasi %> | <span class="status-badge <%= lap.status %>"><%= lap.status %></span></small>
-                        </div>
-                        <a href="/detail/<%= lap.id %>" class="btn-primary" style="background: #0d6efd; text-decoration: none; padding: 8px 15px; border-radius: 5px;">Detail</a>
+<div class="container my-5">
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card card-form p-4 sticky-top" style="top: 100px;">
+                <h4 class="fw-bold mb-4">Lapor Sampah</h4>
+                <form id="reportForm" action="/report" method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="imageInput" class="upload-zone w-100 text-center d-block">
+                            <i class="bi bi-camera-fill h3 text-secondary"></i>
+                            <p class="mb-0 small fw-bold" id="fileName">Ambil Foto / Upload</p>
+                        </label>
+                        <input type="file" name="image" id="imageInput" accept="image/*" capture="environment" class="d-none" required>
                     </div>
-                <% }) %>
-            <% } else { %>
-                <p>Belum ada laporan yang masuk.</p>
-            <% } %>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-uppercase">Subjek</label>
+                        <input type="text" name="title" class="form-control bg-light border-0 p-3" placeholder="Apa yang Anda lihat?" required style="border-radius:12px;">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-uppercase">Detail (Opsional)</label>
+                        <textarea name="description" class="form-control bg-light border-0 p-3" rows="2" placeholder="Detail tambahan..." style="border-radius:12px; font-size: 0.9rem;"></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-uppercase">Lokasi Sekarang</label>
+                        <div class="position-relative">
+                            <textarea id="locDisplay" name="location" class="form-control bg-light border-0 p-3 pe-5" rows="2" readonly style="border-radius:12px; font-size: 0.85rem; resize: none;" required></textarea>
+                            <div id="loader" class="spinner-border spinner-border-sm text-success position-absolute" style="right: 15px; top: 15px;" role="status"></div>
+                        </div>
+                        <input type="hidden" name="latitude" id="lat">
+                        <input type="hidden" name="longitude" id="lng">
+                    </div>
+
+                    <button type="submit" id="btnSubmit" class="btn btn-success w-100 p-3 fw-bold shadow-sm" style="border-radius:12px;">Kirim Laporan</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="fw-bold m-0">Laporan Terkini</h3>
+                <span class="badge bg-white text-dark border px-3 py-2 rounded-pill shadow-sm"><%= reports.length %> Laporan</span>
+            </div>
+            
+            <div class="row g-3">
+                <% if (reports.length > 0) { %>
+                    <% reports.forEach(r => { %>
+                        <div class="col-md-6">
+                            <div class="card report-card shadow-sm h-100">
+                                <div class="img-box">
+                                    <span class="status-badge shadow-sm"><%= r.status %></span>
+                                    <img src="<%= r.image_url %>" alt="report">
+                                </div>
+                                <div class="card-body p-4">
+                                    <h6 class="fw-bold mb-2 text-truncate"><%= r.title %></h6>
+                                    <p class="text-muted mb-3" style="font-size: 0.8rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                        <i class="bi bi-geo-alt-fill text-danger me-1"></i> <%= r.location_name %>
+                                    </p>
+                                    <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-2">
+                                        <small class="text-secondary"><%= new Date(r.created_at).toLocaleDateString('id-ID') %></small>
+                                        <a href="/reports/<%= r.id %>" class="btn btn-sm btn-link text-success fw-bold text-decoration-none">Detail <i class="bi bi-chevron-right"></i></a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <div class="col-12">
+                        <div class="text-center py-5 bg-white rounded-4 shadow-sm">
+                            <i class="bi bi-check-circle text-success display-4"></i>
+                            <p class="text-muted mt-2">Belum ada laporan. Lingkungan Anda bersih!</p>
+                        </div>
+                    </div>
+                <% } %>
+            </div>
         </div>
     </div>
+</div>
+
+<script>
+    // Penanganan Input File
+    document.getElementById('imageInput').onchange = function() {
+        if (this.files && this.files[0]) {
+            const file = this.files[0];
+            if(!file.type.startsWith('image/')){
+                alert("Mohon upload file gambar!");
+                this.value = "";
+                return;
+            }
+            document.getElementById('fileName').innerText = file.name;
+            document.getElementById('fileName').classList.add('text-success');
+        }
+    };
+
+    // Fungsi Reverse Geocoding
+    async function getAddress(lat, lng) {
+        const display = document.getElementById('locDisplay');
+        const loader = document.getElementById('loader');
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+            const data = await response.json();
+            display.value = data.display_name || `Koordinat: ${lat}, ${lng}`;
+        } catch (error) {
+            display.value = `${lat}, ${lng}`;
+        } finally {
+            loader.classList.add('d-none');
+            document.getElementById('btnSubmit').disabled = false;
+        }
+    }
+
+    // Ambil Lokasi saat halaman dimuat
+    window.onload = () => {
+        const btn = document.getElementById('btnSubmit');
+        const display = document.getElementById('locDisplay');
+        btn.disabled = true;
+        display.value = "Mencari alamat Anda...";
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+                    document.getElementById('lat').value = lat;
+                    document.getElementById('lng').value = lng;
+                    getAddress(lat, lng);
+                },
+                (err) => {
+                    display.value = "GPS tidak aktif. Mohon izinkan lokasi.";
+                    document.getElementById('loader').classList.add('d-none');
+                    btn.disabled = false;
+                    btn.innerText = "Kirim Tanpa Lokasi";
+                },
+                { enableHighAccuracy: true }
+            );
+        }
+    };
+
+    // LOGIKA KOMPRESI GAMBAR SEBELUM SUBMIT
+    const reportForm = document.getElementById('reportForm');
+    reportForm.onsubmit = async function(e) {
+        e.preventDefault();
+        
+        const btn = document.getElementById('btnSubmit');
+        const imageInput = document.getElementById('imageInput');
+        const file = imageInput.files[0];
+
+        if (!file) {
+            reportForm.submit();
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerText = "Mengompres Gambar...";
+
+        const options = {
+            maxSizeMB: 1,           // Maksimal ukuran 1MB
+            maxWidthOrHeight: 1280,  // Resolusi maksimal 1280px
+            useWebWorker: true
+        };
+
+        try {
+            // Proses Kompresi
+            const compressedFile = await imageCompression(file, options);
+            
+            // Ganti file di input dengan file hasil kompresi
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(new File([compressedFile], file.name, {
+                type: file.type,
+                lastModified: Date.now()
+            }));
+            imageInput.files = dataTransfer.files;
+
+            btn.innerText = "Mengirim...";
+            reportForm.submit();
+        } catch (error) {
+            console.error("Gagal kompresi:", error);
+            btn.innerText = "Mengirim (Tanpa Kompresi)...";
+            reportForm.submit();
+        }
+    };
+</script>
 </body>
 </html>
